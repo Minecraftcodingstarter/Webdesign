@@ -1,0 +1,462 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Promo-Board</title>
+  <style>
+    :root {
+      --ink: #17232b;
+      --muted: #69777d;
+      --paper: #f6f8f5;
+      --panel: #ffffff;
+      --line: #dbe3df;
+      --navy: #173d4b;
+      --teal: #16847b;
+      --teal-soft: #dff3ee;
+      --yellow: #f4c95d;
+      --yellow-soft: #fff4ce;
+      --blue-soft: #e8f1f7;
+      --green: #2f9b69;
+      --green-soft: #e2f4e9;
+      --shadow: 0 18px 45px rgba(23, 61, 75, .10);
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 8% 4%, rgba(244, 201, 93, .23), transparent 20rem),
+        linear-gradient(135deg, #f6f8f5 0%, #edf4f1 100%);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      min-height: 100vh;
+    }
+
+    button, input { font: inherit; }
+    button { cursor: pointer; }
+    button:focus-visible, input:focus-visible { outline: 3px solid rgba(22,132,123,.35); outline-offset: 3px; }
+
+    .password-gate { position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; padding: 20px; background: linear-gradient(135deg, #173d4b 0%, #0f2b36 100%); }
+    .password-gate.hidden { display: none; }
+    .password-card { width: min(100%, 410px); padding: 32px; border-radius: 22px; background: #fff; box-shadow: 0 25px 70px rgba(0,0,0,.25); text-align: center; }
+    .password-mark { width: 50px; height: 50px; margin: 0 auto 18px; border-radius: 15px 15px 15px 5px; display: grid; place-items: center; color: var(--yellow); background: var(--navy); font-size: 24px; font-weight: 900; box-shadow: 5px 5px 0 var(--yellow); }
+    .password-card h1 { margin: 0; font-size: 30px; line-height: 1; letter-spacing: -.05em; color: var(--navy); }
+    .password-card p { margin: 12px 0 22px; color: var(--muted); font-size: 14px; line-height: 1.5; }
+    .password-form { display: grid; gap: 10px; }
+    #sitePassword { width: 100%; border: 1px solid var(--line); border-radius: 10px; padding: 13px 14px; color: var(--ink); background: #fbfcfb; text-align: center; letter-spacing: .08em; }
+    #sitePassword:focus { border-color: var(--teal); box-shadow: 0 0 0 4px rgba(22,132,123,.10); outline: none; }
+    .password-submit { border: 0; border-radius: 10px; padding: 12px 15px; color: #fff; background: var(--teal); font-weight: 800; }
+    .password-submit:hover { background: #116e67; }
+    .password-error { min-height: 18px; color: #c85c62; font-size: 12px; font-weight: 700; }
+
+    .app-shell { max-width: 1380px; margin: 0 auto; padding: 28px 28px 46px; }
+    .topbar { display: flex; align-items: center; justify-content: space-between; gap: 20px; margin-bottom: 44px; }
+    .brand { display: flex; align-items: center; gap: 13px; }
+    .brand-mark {
+      width: 45px; height: 45px; border-radius: 14px 14px 14px 5px; background: var(--navy);
+      display: grid; place-items: center; color: var(--yellow); font-size: 22px; font-weight: 900; box-shadow: 5px 5px 0 var(--yellow);
+    }
+    .brand-name { font-size: 15px; font-weight: 850; letter-spacing: .04em; text-transform: uppercase; color: var(--navy); }
+    .brand-sub { color: var(--muted); font-size: 12px; margin-top: 2px; }
+
+    .add-btn {
+      border: 0; background: var(--teal); color: #fff; padding: 13px 18px; border-radius: 12px; font-weight: 800;
+      display: inline-flex; align-items: center; gap: 9px; box-shadow: 0 8px 18px rgba(22,132,123,.22); transition: transform .2s, background .2s;
+    }
+    .add-btn:hover { transform: translateY(-2px); background: #116e67; }
+    .plus { font-size: 23px; line-height: 0; font-weight: 400; }
+
+    .hero { display: grid; grid-template-columns: minmax(0, 1fr) minmax(280px, 400px); align-items: end; gap: 40px; margin-bottom: 34px; }
+    .eyebrow { color: var(--teal); font-size: 12px; letter-spacing: .14em; text-transform: uppercase; font-weight: 850; margin-bottom: 12px; }
+    h1 { font-size: clamp(42px, 6vw, 78px); line-height: .94; letter-spacing: -.065em; margin: 0; max-width: 760px; color: var(--navy); }
+    h1 em { font-style: normal; color: var(--teal); }
+    .hero-copy { color: var(--muted); max-width: 510px; line-height: 1.6; font-size: 15px; margin: 20px 0 0; }
+
+    .summary { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+    .stat { background: rgba(255,255,255,.76); border: 1px solid rgba(219,227,223,.9); border-radius: 16px; padding: 16px; }
+    .stat-value { font-size: 29px; font-weight: 850; color: var(--navy); letter-spacing: -.05em; }
+    .stat-label { font-size: 11px; color: var(--muted); margin-top: 4px; }
+    .stat.highlight { background: var(--navy); border-color: var(--navy); }
+    .stat.highlight .stat-value { color: var(--yellow); }
+    .stat.highlight .stat-label { color: #bcd0d3; }
+
+    .workspace { background: var(--panel); border: 1px solid rgba(219,227,223,.95); border-radius: 22px; box-shadow: var(--shadow); overflow: hidden; }
+    .toolbar { padding: 18px 20px; display: flex; align-items: center; justify-content: space-between; gap: 16px; border-bottom: 1px solid var(--line); background: #fbfcfb; }
+    .search-wrap { position: relative; width: min(100%, 390px); }
+    .search-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--muted); font-size: 18px; }
+    #search { width: 100%; border: 1px solid var(--line); background: #fff; padding: 12px 15px 12px 42px; border-radius: 11px; color: var(--ink); font-size: 14px; transition: border .2s, box-shadow .2s; }
+    #search:focus { border-color: var(--teal); box-shadow: 0 0 0 4px rgba(22,132,123,.10); outline: none; }
+    .result-count { color: var(--muted); font-size: 13px; white-space: nowrap; }
+
+    .table-scroll { overflow-x: auto; }
+    table { border-collapse: collapse; width: 100%; min-width: 1180px; }
+    thead { background: var(--navy); color: #fff; }
+    th { text-align: left; padding: 17px 20px; font-size: 11px; text-transform: uppercase; letter-spacing: .09em; font-weight: 800; white-space: nowrap; }
+    th:not(:first-child) { text-align: center; }
+    th:first-child { width: 30%; }
+    .status-head { display: inline-flex; flex-direction: column; align-items: center; gap: 6px; }
+    .status-dot { width: 8px; height: 8px; border-radius: 50%; display: block; background: var(--yellow); }
+    .status-dot.requested { background: #82b4d0; }
+    .status-dot.progress { background: #d58d48; }
+    .status-dot.done { background: #7fd09e; }
+    .status-dot.cancelled { background: #d06e72; }
+    tbody tr { border-bottom: 1px solid var(--line); transition: background .18s; }
+    tbody tr:last-child { border-bottom: 0; }
+    tbody tr:hover { background: #f8fbfa; }
+    td { padding: 14px 20px; vertical-align: middle; }
+    td:not(:first-child) { text-align: center; }
+    .business { display: flex; align-items: center; gap: 12px; }
+    .avatar { width: 37px; height: 37px; border-radius: 11px; display: grid; place-items: center; color: var(--navy); background: var(--yellow-soft); font-weight: 850; font-size: 13px; flex: 0 0 auto; }
+    .business-name { font-size: 14px; font-weight: 750; }
+    .business-name-input { width: 205px; border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; font-size: 13px; font-weight: 750; color: var(--ink); background: #fbfcfb; }
+    .business-name-input:focus { border-color: var(--teal); box-shadow: 0 0 0 3px rgba(22,132,123,.10); outline: none; }
+    .business-meta { color: var(--muted); font-size: 11px; margin-top: 3px; }
+
+    .check { appearance: none; width: 22px; height: 22px; border: 1.5px solid #c5d0cc; border-radius: 7px; background: #fff; display: inline-grid; place-content: center; transition: .2s; }
+    .check::before { content: ""; width: 10px; height: 6px; border: solid white; border-width: 0 0 2px 2px; transform: rotate(-45deg) scale(0); transition: transform .16s ease-in-out; margin-top: -2px; }
+    .check:hover { border-color: var(--teal); background: var(--teal-soft); }
+    .check:checked { background: var(--teal); border-color: var(--teal); }
+    .check:checked::before { transform: rotate(-45deg) scale(1); }
+    .check:checked[data-kind="done"] { background: var(--green); border-color: var(--green); }
+    .check:checked[data-kind="created"] { background: #d79a27; border-color: #d79a27; }
+    .check:checked[data-kind="requested"] { background: #5e9ab8; border-color: #5e9ab8; }
+    .check:checked[data-kind="cancelled"] { background: #c85c62; border-color: #c85c62; }
+    .link-cell { min-width: 180px; }
+    .link-input { width: 170px; border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; font-size: 12px; color: var(--ink); background: #fbfcfb; }
+    .link-input:focus { border-color: var(--teal); box-shadow: 0 0 0 3px rgba(22,132,123,.10); outline: none; }
+    .link-open { display: inline-flex; margin-left: 5px; color: var(--teal); font-size: 16px; text-decoration: none; vertical-align: middle; }
+    .link-open:hover { color: var(--navy); }
+    .contact-cell { min-width: 220px; }
+    .contact-fields { display: grid; gap: 6px; }
+    .contact-input { width: 200px; border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; font-size: 12px; color: var(--ink); background: #fbfcfb; }
+    .contact-input:focus { border-color: var(--teal); box-shadow: 0 0 0 3px rgba(22,132,123,.10); outline: none; }
+
+    .empty { display: none; padding: 58px 20px; text-align: center; color: var(--muted); }
+    .empty.show { display: block; }
+    .empty-icon { font-size: 34px; margin-bottom: 10px; }
+    .empty strong { display: block; color: var(--navy); font-size: 17px; margin-bottom: 5px; }
+
+    .modal-backdrop { position: fixed; inset: 0; background: rgba(23,35,43,.45); backdrop-filter: blur(5px); display: none; align-items: center; justify-content: center; padding: 20px; z-index: 10; }
+    .modal-backdrop.open { display: flex; }
+    .modal { width: min(100%, 440px); background: #fff; border-radius: 20px; padding: 26px; box-shadow: 0 25px 70px rgba(0,0,0,.22); animation: pop .22s ease-out; }
+    @keyframes pop { from { opacity: 0; transform: translateY(8px) scale(.98); } to { opacity: 1; transform: none; } }
+    .modal-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 20px; }
+    .modal h2 { margin: 0; font-size: 25px; letter-spacing: -.04em; color: var(--navy); }
+    .modal p { margin: 7px 0 22px; color: var(--muted); font-size: 13px; line-height: 1.5; }
+    .close { border: 0; background: #eff4f2; color: var(--navy); border-radius: 9px; width: 32px; height: 32px; font-size: 20px; line-height: 1; }
+    label { display: block; font-size: 12px; font-weight: 800; color: var(--navy); margin-bottom: 8px; }
+    #businessName { width: 100%; border: 1px solid var(--line); padding: 13px 14px; border-radius: 10px; outline: none; }
+    #businessName:focus { border-color: var(--teal); box-shadow: 0 0 0 4px rgba(22,132,123,.10); }
+    .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 22px; }
+    .secondary, .primary { border: 0; border-radius: 10px; padding: 11px 15px; font-weight: 800; }
+    .secondary { color: var(--navy); background: #eff4f2; }
+    .primary { color: #fff; background: var(--teal); }
+    .primary:hover { background: #116e67; }
+    .confirm-modal { width: min(100%, 420px); }
+    .confirm-icon { width: 42px; height: 42px; display: grid; place-items: center; border-radius: 13px; color: #9b6310; background: var(--yellow-soft); font-size: 22px; margin-bottom: 14px; }
+    .danger { color: #fff; background: #c85c62; }
+    .danger:hover { background: #aa454c; }
+
+    @media (max-width: 760px) {
+      .app-shell { padding: 18px 14px 35px; }
+      .topbar { margin-bottom: 33px; }
+      .hero { grid-template-columns: 1fr; gap: 24px; }
+      .summary { grid-template-columns: repeat(4, 1fr); }
+      .stat { padding: 11px 10px; }
+      .stat-value { font-size: 22px; }
+      .stat-label { font-size: 10px; }
+      .toolbar { align-items: stretch; flex-direction: column; }
+      .search-wrap { width: 100%; }
+      .result-count { text-align: right; }
+      h1 { font-size: clamp(44px, 15vw, 66px); }
+      .brand-sub { display: none; }
+    }
+    @media (max-width: 440px) {
+      .summary { gap: 6px; }
+      .stat { border-radius: 11px; }
+      .stat-value { font-size: 19px; }
+      .stat-label { line-height: 1.15; }
+      .add-btn { padding: 11px 13px; }
+    }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; } }
+  </style>
+</head>
+<body>
+  <div class="password-gate" id="passwordGate" role="dialog" aria-modal="true" aria-labelledby="passwordTitle">
+    <div class="password-card">
+      <div class="password-mark" aria-hidden="true">✦</div>
+      <h1 id="passwordTitle">Promo-Board</h1>
+      <p>Gib das Passwort ein, um die Website zu öffnen.</p>
+      <form class="password-form" id="passwordForm">
+        <label for="sitePassword">Passwort</label>
+        <input id="sitePassword" type="password" autocomplete="current-password" required autofocus />
+        <button class="password-submit" type="submit">Website öffnen</button>
+        <div class="password-error" id="passwordError" aria-live="polite"></div>
+      </form>
+    </div>
+  </div>
+
+  <main class="app-shell">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true">✦</div>
+        <div>
+          <div class="brand-name">Promo-Board</div>
+          <div class="brand-sub">Betriebe im Überblick</div>
+        </div>
+      </div>
+      <button class="add-btn" id="openModal" type="button"><span class="plus">+</span> Einfügen</button>
+    </header>
+
+    <section class="hero" aria-labelledby="page-title">
+      <div>
+        <div class="eyebrow">Arbeitsstand · Promo</div>
+        <h1>Alles im Blick.<br><em>Jeder Betrieb.</em></h1>
+        <p class="hero-copy">Pflege den Stand deiner Promo-Aktionen an einem Ort. Die Liste bleibt automatisch alphabetisch sortiert.</p>
+      </div>
+      <div class="summary" aria-label="Zusammenfassung">
+        <div class="stat"><div class="stat-value" id="totalCount">0</div><div class="stat-label">Betriebe gesamt</div></div>
+        <div class="stat highlight"><div class="stat-value" id="doneCount">0</div><div class="stat-label">fertig</div></div>
+        <div class="stat"><div class="stat-value" id="openCount">0</div><div class="stat-label">offen</div></div>
+        <div class="stat"><div class="stat-value" id="progressCount">0</div><div class="stat-label">in Arbeit</div></div>
+      </div>
+    </section>
+
+    <section class="workspace" aria-label="Promo-Tabelle">
+      <div class="toolbar">
+        <div class="search-wrap">
+          <span class="search-icon" aria-hidden="true">⌕</span>
+          <input id="search" type="search" placeholder="Betrieb suchen …" aria-label="Betrieb suchen" autocomplete="off" />
+        </div>
+        <div class="result-count" id="resultCount">0 Betriebe</div>
+      </div>
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">Name <span aria-hidden="true">↕</span></th>
+              <th scope="col"><span class="status-head"><span class="status-dot"></span>Erstellt</span></th>
+              <th scope="col"><span class="status-head"><span class="status-dot requested"></span>Angefragt</span></th>
+              <th scope="col"><span class="status-head"><span class="status-dot progress"></span>In Bearbeitung</span></th>
+              <th scope="col"><span class="status-head"><span class="status-dot done"></span>Fertig</span></th>
+              <th scope="col"><span class="status-head"><span class="status-dot cancelled"></span>Abgesagt</span></th>
+              <th scope="col">Kontakt</th>
+              <th scope="col">Link</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody"></tbody>
+        </table>
+        <div class="empty" id="emptyState"><div class="empty-icon">⌕</div><strong>Kein Betrieb gefunden</strong><span>Versuche einen anderen Suchbegriff.</span></div>
+      </div>
+    </section>
+  </main>
+
+  <div class="modal-backdrop" id="modalBackdrop" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal">
+      <div class="modal-top">
+        <div>
+          <h2 id="modalTitle">Betrieb einfügen</h2>
+          <p>Lege einen neuen Betrieb an. Die Statusfelder kannst du anschließend direkt in der Tabelle pflegen.</p>
+        </div>
+        <button class="close" id="closeModal" type="button" aria-label="Dialog schließen">×</button>
+      </div>
+      <form id="addForm">
+        <label for="businessName">Name des Betriebs</label>
+        <input id="businessName" type="text" placeholder="z. B. Café Sonnenseite" required maxlength="80" />
+        <div class="modal-actions">
+          <button class="secondary" id="cancelModal" type="button">Abbrechen</button>
+          <button class="primary" type="submit">Betrieb hinzufügen</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="confirmBackdrop" role="dialog" aria-modal="true" aria-labelledby="confirmTitle">
+    <div class="modal confirm-modal">
+      <div class="confirm-icon" aria-hidden="true">!</div>
+      <h2 id="confirmTitle">Status ändern?</h2>
+      <p id="confirmText">Möchtest du diesen Status wirklich ändern?</p>
+      <div class="modal-actions">
+        <button class="secondary" id="cancelConfirm" type="button">Abbrechen</button>
+        <button class="primary danger" id="acceptConfirm" type="button">Bestätigen</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const sitePassword = 'MaxJakob135';
+    const passwordGate = document.getElementById('passwordGate');
+    const passwordForm = document.getElementById('passwordForm');
+    const sitePasswordInput = document.getElementById('sitePassword');
+    const passwordError = document.getElementById('passwordError');
+
+    passwordForm.addEventListener('submit', (event) => {
+      event.preventDefault();
+      if (sitePasswordInput.value === sitePassword) {
+        passwordGate.classList.add('hidden');
+        passwordError.textContent = '';
+        sitePasswordInput.value = '';
+      } else {
+        passwordError.textContent = 'Das Passwort ist nicht korrekt.';
+        sitePasswordInput.value = '';
+        sitePasswordInput.focus();
+      }
+    });
+
+    const initialBusinesses = [
+      { name: 'Alte Mühle', status: [true, true, false, false, false], link: '', email: '', phone: '' },
+      { name: 'Bäckerei Morgenrot', status: [true, false, true, false, false], link: '', email: '', phone: '' },
+      { name: 'Café Sonnenseite', status: [true, true, true, true, false], link: 'https://example.com/cafe-sonnenseite', email: 'hallo@sonnenseite.de', phone: '+49 30 123456' },
+      { name: 'Fahrradwerkstatt Kette & Co.', status: [true, false, false, false, false], link: '', email: '', phone: '' },
+      { name: 'Gasthaus Zum Anker', status: [false, true, false, false, false], link: '', email: '', phone: '' },
+      { name: 'Studio Nordlicht', status: [true, true, true, false, false], link: '', email: '', phone: '' }
+    ];
+    let businesses = initialBusinesses.map(item => ({ ...item, status: [...item.status], email: item.email || '', phone: item.phone || '' }));
+    let pendingChange = null;
+
+    const body = document.getElementById('tableBody');
+    const search = document.getElementById('search');
+    const emptyState = document.getElementById('emptyState');
+    const resultCount = document.getElementById('resultCount');
+    const modal = document.getElementById('modalBackdrop');
+    const confirmBackdrop = document.getElementById('confirmBackdrop');
+    const confirmTitle = document.getElementById('confirmTitle');
+    const confirmText = document.getElementById('confirmText');
+    const acceptConfirm = document.getElementById('acceptConfirm');
+    const nameInput = document.getElementById('businessName');
+
+    const initials = (name) => name.split(/\s+/).filter(Boolean).slice(0, 2).map(word => word[0]).join('').toUpperCase();
+    const escapeHtml = (value) => value.replace(/[&<>'"]/g, character => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[character]));
+
+    function render() {
+      const query = search.value.trim().toLocaleLowerCase('de-DE');
+      const visible = businesses
+        .filter(item => item.name.toLocaleLowerCase('de-DE').includes(query))
+        .sort((a, b) => a.name.localeCompare(b.name, 'de'));
+
+      body.innerHTML = visible.map(item => {
+        const index = businesses.indexOf(item);
+        return `<tr>
+          <td><div class="business"><div class="avatar">${escapeHtml(initials(item.name))}</div><div><input class="business-name-input" type="text" value="${escapeHtml(item.name)}" data-name-business="${index}" aria-label="Name des Betriebs bearbeiten" maxlength="80"><div class="business-meta">Promo-Status</div></div></div></td>
+          ${item.status.map((checked, statusIndex) => `<td><input class="check" type="checkbox" ${checked ? 'checked' : ''} data-kind="${['created','requested','progress','done','cancelled'][statusIndex]}" data-business="${index}" data-status="${statusIndex}" aria-label="${escapeHtml(item.name)}: ${['Erstellt','Angefragt','In Bearbeitung','Fertig','Abgesagt'][statusIndex]}"></td>`).join('')}
+          <td class="contact-cell"><div class="contact-fields"><input class="contact-input" type="email" value="${escapeHtml(item.email || '')}" placeholder="E-Mail-Adresse" data-contact="email" data-business="${index}" aria-label="E-Mail für ${escapeHtml(item.name)}"><input class="contact-input" type="tel" value="${escapeHtml(item.phone || '')}" placeholder="Telefonnummer" data-contact="phone" data-business="${index}" aria-label="Telefonnummer für ${escapeHtml(item.name)}"></div></td>
+          <td class="link-cell"><input class="link-input" type="url" value="${escapeHtml(item.link || '')}" placeholder="https://…" data-link-business="${index}" aria-label="Link für ${escapeHtml(item.name)}"><a class="link-open" href="${escapeHtml(item.link || '#')}" target="_blank" rel="noopener" aria-label="Link öffnen" ${item.link ? '' : 'hidden'}>↗</a></td>
+        </tr>`;
+      }).join('');
+
+      emptyState.classList.toggle('show', visible.length === 0);
+      resultCount.textContent = `${visible.length} ${visible.length === 1 ? 'Betrieb' : 'Betriebe'}`;
+      updateSummary();
+    }
+
+    function updateSummary() {
+      const total = businesses.length;
+      const done = businesses.filter(item => item.status[3]).length;
+      const inProgress = businesses.filter(item => item.status[2] && !item.status[3]).length;
+      document.getElementById('totalCount').textContent = total;
+      document.getElementById('doneCount').textContent = done;
+      document.getElementById('openCount').textContent = total - done;
+      document.getElementById('progressCount').textContent = inProgress;
+    }
+
+    function openModal() { modal.classList.add('open'); nameInput.value = ''; setTimeout(() => nameInput.focus(), 50); }
+    function closeModal() { modal.classList.remove('open'); document.getElementById('openModal').focus(); }
+
+    document.getElementById('openModal').addEventListener('click', openModal);
+    document.getElementById('closeModal').addEventListener('click', closeModal);
+    document.getElementById('cancelModal').addEventListener('click', closeModal);
+    modal.addEventListener('click', (event) => { if (event.target === modal) closeModal(); });
+    document.addEventListener('keydown', (event) => { if (event.key === 'Escape' && modal.classList.contains('open')) closeModal(); });
+    search.addEventListener('input', render);
+
+    document.getElementById('addForm').addEventListener('submit', (event) => {
+      event.preventDefault();
+      const name = nameInput.value.trim();
+      if (!name) return;
+      businesses.push({ name, status: [false, false, false, false, false], link: '', email: '', phone: '' });
+      closeModal();
+      render();
+      search.value = '';
+    });
+
+    body.addEventListener('change', (event) => {
+      if (event.target.matches('.business-name-input')) {
+        const businessIndex = Number(event.target.dataset.nameBusiness);
+        const newName = event.target.value.trim();
+        if (!newName || newName === businesses[businessIndex].name) {
+          event.target.value = businesses[businessIndex].name;
+          return;
+        }
+        pendingChange = { type: 'rename', businessIndex, newName, input: event.target };
+        confirmTitle.textContent = 'Namen ändern?';
+        confirmText.textContent = `Möchtest du den Betrieb wirklich in „${newName}“ umbenennen?`;
+        acceptConfirm.textContent = 'OK';
+        event.target.value = businesses[businessIndex].name;
+        confirmBackdrop.classList.add('open');
+        acceptConfirm.focus();
+        return;
+      }
+
+      if (event.target.matches('.check')) {
+        const businessIndex = Number(event.target.dataset.business);
+        const statusIndex = Number(event.target.dataset.status);
+        const statusName = ['Erstellt','Angefragt','In Bearbeitung','Fertig','Abgesagt'][statusIndex];
+        const shouldCheck = event.target.checked;
+        event.target.checked = !shouldCheck;
+        pendingChange = { businessIndex, statusIndex, shouldCheck, checkbox: event.target };
+        confirmTitle.textContent = 'Status ändern?';
+        acceptConfirm.textContent = 'Bestätigen';
+        confirmText.textContent = `${shouldCheck ? 'Möchtest du' : 'Möchtest du wirklich'} den Status „${statusName}“ für „${businesses[businessIndex].name}“ ${shouldCheck ? 'setzen' : 'entfernen'}?`;
+        confirmBackdrop.classList.add('open');
+        document.getElementById('acceptConfirm').focus();
+        return;
+      }
+
+      if (event.target.matches('.link-input')) {
+        const businessIndex = Number(event.target.dataset.linkBusiness);
+        businesses[businessIndex].link = event.target.value.trim();
+        render();
+      }
+
+      if (event.target.matches('.contact-input')) {
+        const businessIndex = Number(event.target.dataset.business);
+        const contactType = event.target.dataset.contact;
+        businesses[businessIndex][contactType] = event.target.value.trim();
+      }
+    });
+
+    document.getElementById('cancelConfirm').addEventListener('click', () => {
+      pendingChange = null;
+      confirmBackdrop.classList.remove('open');
+    });
+
+    document.getElementById('acceptConfirm').addEventListener('click', () => {
+      if (!pendingChange) return;
+      if (pendingChange.type === 'rename') {
+        businesses[pendingChange.businessIndex].name = pendingChange.newName;
+        pendingChange = null;
+        confirmBackdrop.classList.remove('open');
+        acceptConfirm.textContent = 'Bestätigen';
+        confirmTitle.textContent = 'Status ändern?';
+        render();
+        return;
+      }
+      const { businessIndex, statusIndex, shouldCheck, checkbox } = pendingChange;
+      businesses[businessIndex].status[statusIndex] = shouldCheck;
+      checkbox.checked = shouldCheck;
+      pendingChange = null;
+      confirmBackdrop.classList.remove('open');
+      acceptConfirm.textContent = 'Bestätigen';
+      confirmTitle.textContent = 'Status ändern?';
+      updateSummary();
+    });
+
+    confirmBackdrop.addEventListener('click', (event) => {
+      if (event.target === confirmBackdrop) document.getElementById('cancelConfirm').click();
+    });
+
+    render();
+  </script>
+</body>
+</html>
